@@ -10,16 +10,34 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '@/api/client';
 
 const SignupPage = () => {
-  const [email, setEmail] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const [userId, setUserId] = useState('');
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/');
+
+    setSubmitting(true);
+    setErrorMsg(null);
+    try {
+      await api.post("/api/v1/user/register", {
+        userId: userId,
+        name: name,
+        password: password
+      });
+      navigate('/');
+    } catch (error: any) {
+      setErrorMsg(error.response.data.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -46,13 +64,13 @@ const SignupPage = () => {
             <Stack gap={4}>
               <Box>
                 <Text mb={1} fontSize="sm">
-                  이메일
+                  아이디
                 </Text>
                 <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="아이디를 입력하세요"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  required
                 />
               </Box>
 
@@ -62,8 +80,9 @@ const SignupPage = () => {
                 </Text>
                 <Input
                   placeholder="닉네임을 입력하세요"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
                 />
               </Box>
 
@@ -76,10 +95,17 @@ const SignupPage = () => {
                   placeholder="비밀번호를 입력하세요"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </Box>
 
-              <Button type="submit" colorScheme="teal" w="100%">
+              {errorMsg && (
+                <Text color="red.500" fontSize="sm">
+                  {errorMsg}
+                </Text>
+              )}
+
+              <Button type="submit" colorScheme="teal" w="100%" loading={submitting}>
                 회원가입
               </Button>
             </Stack>

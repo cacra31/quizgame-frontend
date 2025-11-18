@@ -11,14 +11,30 @@ import {
   Field,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '@/api/client';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const navigate = useNavigate();
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/home');
+    setSubmitting(true);
+    setErrorMsg(null);
+    try {
+      await api.post("/login", {
+        userId,
+        password,
+      });
+      navigate('/home');
+    } catch (error) {
+      setErrorMsg('아이디 또는 비밀번호를 확인해주세요.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -41,22 +57,17 @@ const LoginPage = () => {
             <Heading size="lg" mb={1}>
               🎮 Quiz Game
             </Heading>
-            <Text fontSize="sm" color="gray.500">
-              로그인 후 퀴즈를 시작하세요
-            </Text>
           </Box>
           <Box as="form" onSubmit={handleSubmit}>
             <Stack gap={4}>
               <Field.Root>
-                <Field.Label>이메일</Field.Label>
+                <Field.Label>아이디</Field.Label>
                 <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="아이디를 입력하세요"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
                 />
               </Field.Root>
-
               <Field.Root>
                 <Field.Label>비밀번호</Field.Label>
                 <Input
@@ -67,11 +78,18 @@ const LoginPage = () => {
                 />
               </Field.Root>
 
+              {errorMsg && (
+                <Text color="red.500" fontSize="sm">
+                  {errorMsg}
+                </Text>
+              )}
+
               <Button
                 type="submit"
                 colorScheme="teal"
                 size="md"
                 w="100%"
+                loading={submitting}
               >
                 로그인
               </Button>
