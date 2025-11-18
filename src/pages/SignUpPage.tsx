@@ -1,5 +1,4 @@
-// src/pages/login.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -9,25 +8,22 @@ import {
   Link,
   Stack,
   Text,
-  Field,
 } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 
-const LoginPage: React.FC = () => {
+const SignupPage = () => {
   const [email, setEmail] = useState('');
+  const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('로그인 시도:', { email, password });
+    navigate('/');
   };
 
   return (
-    <Flex
-      minH="100vh"
-      align="center"
-      justify="center"
-      bg="gray.50"
-    >
+    <Flex minH="100vh" align="center" justify="center" bg="gray.50">
       <Box
         bg="white"
         p={8}
@@ -37,56 +33,63 @@ const LoginPage: React.FC = () => {
         maxW="400px"
       >
         <Stack gap={6}>
-          {/* 상단 타이틀 */}
           <Box textAlign="center">
             <Heading size="lg" mb={1}>
-              🎮 Quiz Game
+              회원가입
             </Heading>
             <Text fontSize="sm" color="gray.500">
-              로그인 후 퀴즈를 시작하세요
+              퀴즈 게임을 시작할 계정을 만들어 보세요
             </Text>
           </Box>
 
-          {/* 폼 */}
           <Box as="form" onSubmit={handleSubmit}>
             <Stack gap={4}>
-              <Field.Root>
-                <Field.Label>이메일</Field.Label>
+              <Box>
+                <Text mb={1} fontSize="sm">
+                  이메일
+                </Text>
                 <Input
                   type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
-              </Field.Root>
+              </Box>
 
-              <Field.Root>
-                <Field.Label>비밀번호</Field.Label>
+              <Box>
+                <Text mb={1} fontSize="sm">
+                  닉네임
+                </Text>
+                <Input
+                  placeholder="닉네임을 입력하세요"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                />
+              </Box>
+
+              <Box>
+                <Text mb={1} fontSize="sm">
+                  비밀번호
+                </Text>
                 <Input
                   type="password"
                   placeholder="비밀번호를 입력하세요"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-              </Field.Root>
+              </Box>
 
-              <Button
-                type="submit"
-                colorScheme="teal"
-                size="md"
-                w="100%"
-              >
-                로그인
+              <Button type="submit" colorScheme="teal" w="100%">
+                회원가입
               </Button>
             </Stack>
           </Box>
 
-          {/* 하단 링크 */}
           <Stack gap={2} fontSize="sm" textAlign="center">
             <Text color="gray.500">
-              아직 계정이 없나요?{' '}
-              <Link color="teal.500" href="#">
-                회원가입
+              이미 계정이 있나요?{' '}
+              <Link color="teal.500" onClick={() => navigate('/')}>
+                로그인
               </Link>
             </Text>
           </Stack>
@@ -96,4 +99,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default SignupPage;
