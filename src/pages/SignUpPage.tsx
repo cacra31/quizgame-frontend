@@ -10,34 +10,36 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '@/api/client';
+import { useRegister } from '@/hooks/useRegister';
 
 const SignupPage = () => {
   const navigate = useNavigate();
+
   const [userId, setUserId] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-
-  const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const registerMutation = useRegister();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    setSubmitting(true);
     setErrorMsg(null);
-    try {
-      await api.post("/api/v1/user/register", {
-        userId: userId,
-        name: name,
-        password: password
-      });
-      navigate('/');
-    } catch (error: any) {
-      setErrorMsg(error.response.data.message);
-    } finally {
-      setSubmitting(false);
-    }
+
+    registerMutation.mutate(
+      {userId, password, name},
+      {
+        onSuccess: (data) => {
+
+          navigate('/home');
+        },
+        onError: (error: any) => {
+          setErrorMsg(error.response.data.message);
+        },
+      }
+    );
+
+
   };
 
   return (
@@ -105,7 +107,7 @@ const SignupPage = () => {
                 </Text>
               )}
 
-              <Button type="submit" colorScheme="teal" w="100%" loading={submitting}>
+              <Button type="submit" colorScheme="teal" w="100%" loading={registerMutation.isPending}>
                 회원가입
               </Button>
             </Stack>

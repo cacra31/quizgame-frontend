@@ -11,53 +11,43 @@ import {
   Field,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '@/api/client';
+import { useLogin } from '@/hooks/useLogin';
 
 const LoginPage = () => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const handleSubmit = async (e: React.FormEvent) => {
+  const loginMutation = useLogin();
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
     setErrorMsg(null);
-    try {
-      await api.post("/login", {
-        userId,
-        password,
-      });
-      navigate('/home');
-    } catch (error) {
-      setErrorMsg('아이디 또는 비밀번호를 확인해주세요.');
-    } finally {
-      setSubmitting(false);
-    }
+
+    loginMutation.mutate(
+      { userId, password },
+      {
+        onSuccess: () => {
+          navigate('/home');
+        },
+        onError: () => {
+          setErrorMsg("아이디 또는 비밀번호를 확인해주세요.");
+        },
+      }
+    );
   };
 
   return (
-    <Flex
-      minH="100vh"
-      align="center"
-      justify="center"
-      bg="gray.50"
-    >
-      <Box
-        bg="white"
-        p={8}
-        rounded="lg"
-        boxShadow="lg"
-        w="100%"
-        maxW="400px"
-      >
+    <Flex minH="100vh" align="center" justify="center" bg="gray.50">
+      <Box bg="white" p={8} rounded="lg" boxShadow="lg" w="100%" maxW="400px">
         <Stack gap={6}>
           <Box textAlign="center">
             <Heading size="lg" mb={1}>
               🎮 Quiz Game
             </Heading>
           </Box>
+
           <Box as="form" onSubmit={handleSubmit}>
             <Stack gap={4}>
               <Field.Root>
@@ -68,6 +58,7 @@ const LoginPage = () => {
                   onChange={(e) => setUserId(e.target.value)}
                 />
               </Field.Root>
+
               <Field.Root>
                 <Field.Label>비밀번호</Field.Label>
                 <Input
@@ -89,12 +80,13 @@ const LoginPage = () => {
                 colorScheme="teal"
                 size="md"
                 w="100%"
-                loading={submitting}
+                loading={loginMutation.isPending}
               >
                 로그인
               </Button>
             </Stack>
           </Box>
+
           <Stack gap={2} fontSize="sm" textAlign="center">
             <Text color="gray.500">
               아직 계정이 없나요?{' '}

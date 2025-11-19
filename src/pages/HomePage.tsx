@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Heading, Stack, Text } from '@chakra-ui/react';
+import { Box, Button, For, Grid, Heading, Stack, Text } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
@@ -10,8 +10,7 @@ const HomePage = () => {
         <Stack gap={4}>
           <Heading size="lg">메인 화면</Heading>
           <Grid templateColumns="repeat(3, 1fr)" gap="6">
-            <Box p={4} bg="pink" rounded="lg" boxShadow="lg"/>
-            <Box p={4} bg="pink" rounded="lg" boxShadow="lg"/>
+            
             <Box p={4} bg="pink" rounded="lg" boxShadow="lg"/>
           </Grid>
 
