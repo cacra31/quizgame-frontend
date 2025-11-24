@@ -1,8 +1,23 @@
-import { Box, Button, For, Grid, Heading, Stack, Text } from '@chakra-ui/react';
+import { useLogoutMutation } from '@/features/auth/api/authMutation';
+import useAuthStore from '@/features/auth/stores/authStore';
+import { Box, Button, Grid, Heading, Stack } from '@chakra-ui/react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const logoutMutation = useLogoutMutation();
+  const useUserStore = useAuthStore();
+  const handleLogout = async () => {
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => navigate('/login', { replace: true }),
+      onError: () => navigate('/login', { replace: true }),
+    });
+  };
+
+  useEffect(() => {
+    console.log(useUserStore.user);
+  }, []);
 
   return (
     <Box minH="100vh" bg="gray.50" display="flex" alignItems="center" justifyContent="center">
@@ -10,15 +25,9 @@ const HomePage = () => {
         <Stack gap={4}>
           <Heading size="lg">메인 화면</Heading>
           <Grid templateColumns="repeat(3, 1fr)" gap="6">
-            
-            <Box p={4} bg="pink" rounded="lg" boxShadow="lg"/>
+
           </Grid>
-
-          <Button colorScheme="teal" onClick={() => alert('게임 시작은 나중에 구현하자 😎')}>
-            퀴즈 시작하기
-          </Button>
-
-          <Button variant="outline" onClick={() => navigate('/')}>
+          <Button variant="outline" onClick={handleLogout}>
             로그아웃
           </Button>
         </Stack>

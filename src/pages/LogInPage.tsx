@@ -1,17 +1,7 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  Flex,
-  Heading,
-  Input,
-  Link,
-  Stack,
-  Text,
-  Field,
-} from '@chakra-ui/react';
+import { Box, Button, Flex, Heading, Input, Link, Stack, Text, Field, } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { useLogin } from '@/hooks/useLogin';
+import { useLoginMutation } from '@/features/auth/api/authMutation';
 
 const LoginPage = () => {
   const [userId, setUserId] = useState('');
@@ -19,23 +9,25 @@ const LoginPage = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  const loginMutation = useLogin();
+  const loginMutation = useLoginMutation();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-
     loginMutation.mutate(
       { userId, password },
       {
         onSuccess: () => {
-          navigate('/home');
+          navigate("/home", { replace: true });
         },
-        onError: () => {
-          setErrorMsg("아이디 또는 비밀번호를 확인해주세요.");
+        onError: (err: any) => {
+          if (err.response.data.code === 50002) {
+            setErrorMsg("아이디 또는 비밀번호를 확인해주세요.");
+          }
         },
       }
     );
+
   };
 
   return (

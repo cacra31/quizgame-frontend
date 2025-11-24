@@ -1,10 +1,18 @@
 {
+  "compilerOptions": {
+    "typeRoots": ["node_modules/@types", "src/types"],
+    "jsx": "react-jsx",
+    "types": ["react", "react-dom"],
+
+    // 이건 이미 있을 거라 예상
+    "moduleResolution": "bundler",
+    "target": "ESNext",
+    "module": "ESNext",
+    "verbatimModuleSyntax": true
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ],
-  "compilerOptions": {
-    "typeRoots": ["node_modules/@types", "src/types"]
-  }
+  ]
 }

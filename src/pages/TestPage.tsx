@@ -1,6 +1,6 @@
 // src/pages/TestPage.tsx
 import { useEffect, useState } from "react";
-import { useWebSocket } from "@/websocket/useWebSocket";
+import { useWebSocket } from "@/shared/websocket/useWebSocket";
 
 const TestPage = () => {
   const { connected, send, subscribe } = useWebSocket();
