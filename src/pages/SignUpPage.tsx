@@ -21,7 +21,7 @@ const SignupPage = () => {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignUp = async () => {
     setErrorMsg(null);
     signUpMutation.mutate(
       { userId, name, password },
