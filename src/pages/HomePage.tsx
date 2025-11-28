@@ -22,7 +22,7 @@ const HomePage = () => {
   const handleEnterRoom = (categoryId: number) => {
     roomEnterMutation.mutate(categoryId, {
       onSuccess: (res:any) => {
-        navigate(`/game/${res.data.roomId}`, { replace: true });
+        navigate(`/game/${res.data}`, { replace: true });
       },
       onError: (err) => {
         console.log(err);
