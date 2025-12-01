@@ -1,7 +1,8 @@
 import { useRoomLeaveMutation, useRoomQuery } from "@/features/room/api/roomApi";
 import { useWebSocket } from "@/shared/websocket/useWebSocket";
+import type { GameEvent } from "@/types/gameType";
 import type { UserDto } from "@/types/userType";
-import { Box, Button, Separator, Spinner, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Center, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 const GamePage = () => {
@@ -11,6 +12,12 @@ const GamePage = () => {
   const roomLeaveMutation = useRoomLeaveMutation();
   const { data, isLoading, isError, refetch } = useRoomQuery(Number(roomId));
   const [users, setUsers] = useState<UserDto[]>([]);
+  const [gameEvent, setGameEvent] = useState<GameEvent>({
+    type: 'WAITING',
+    roomId: null,
+    index: null,
+    question: null,
+  });
 
   const handleRoomLeave = () => {
     roomLeaveMutation.mutate(
@@ -34,7 +41,10 @@ const GamePage = () => {
   useEffect(() => {
     const subs = [
       subscribe(`/topic/room/${roomId}/users`, (users) => setUsers(users)),
-      subscribe(`/topic/room/${roomId}/question`, (msg) => console.log('question', msg)),
+      subscribe(`/topic/room/${roomId}/question`, (msg: GameEvent) => {
+        console.log(msg);
+        setGameEvent(msg);
+      }),
       subscribe(`/topic/room/${roomId}`, (msg) => console.log('result', msg)),
     ];
     return () => {
@@ -137,12 +147,26 @@ const GamePage = () => {
               <Text fontSize="lg" fontWeight="bold">
                 방 번호: {roomId}
               </Text>
-
               <Button variant="outline" size="sm" onClick={handleRoomLeave}>
                 방 떠나기
               </Button>
-
-              {/* 나중에 여기 타이머 / 문제 / 진행 상태 넣으면 됨 */}
+              {gameEvent?.type === 'WAITING' && (
+                <Center>
+                  <Text color="gray.500">{data?.createdAt}</Text>
+                </Center>
+              )}
+              {gameEvent?.type === 'GAME_STARTED' && (
+                <Text color="blue.500">GAME_STARTED</Text>
+              )}
+              {gameEvent?.type === 'QUESTION_STARTED' && (
+                <Text color="blue.500">{gameEvent.question?.content}</Text>
+              )}
+              {gameEvent?.type === 'QUESTION_FINISHED' && (
+                <Text color="blue.500">QUESTION_ENDED</Text>
+              )}
+              {gameEvent?.type === 'GAME_FINISHED' && (
+                <Text color="blue.500">GAME_ENDED</Text>
+              )}
             </Stack>
           </Box>
         </Box>
