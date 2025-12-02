@@ -4,3 +4,9 @@ export interface AnswerDto {
     answer: string;
     correctYn: boolean;
 }
+
+export interface AnswerRequest {
+    roomId: number;
+    index: number|null;
+    answer: string;
+}

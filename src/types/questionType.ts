@@ -5,5 +5,6 @@ export interface QuestionDto {
     questionId: number;
     content: string;
     difficulty: number;
+    questionType: number;
     answers: AnswerDto[];
 }

@@ -1,8 +1,9 @@
+import { useSubmitAnswerMutation } from "@/features/answer/api/answerApi";
 import { useRoomLeaveMutation, useRoomQuery } from "@/features/room/api/roomApi";
 import { useWebSocket } from "@/shared/websocket/useWebSocket";
 import type { GameEvent } from "@/types/gameType";
 import type { UserDto } from "@/types/userType";
-import { Box, Button, Center, Spinner, Stack, Text } from "@chakra-ui/react";
+import { Box, Button, Center, Input, Progress, ProgressCircle, RadioGroup, Spinner, Stack, Text, VStack } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 const GamePage = () => {
@@ -10,14 +11,14 @@ const GamePage = () => {
   const navigate = useNavigate();
   const { subscribe } = useWebSocket();
   const roomLeaveMutation = useRoomLeaveMutation();
+  const submitAnswerMutation = useSubmitAnswerMutation();
   const { data, isLoading, isError, refetch } = useRoomQuery(Number(roomId));
   const [users, setUsers] = useState<UserDto[]>([]);
-  const [gameEvent, setGameEvent] = useState<GameEvent>({
-    type: 'WAITING',
-    roomId: null,
-    index: null,
-    question: null,
-  });
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [gameEvent, setGameEvent] = useState<GameEvent>({ type: 'WAITING', roomId: null, index: null, question: null });
+  const [answer, setAnswer] = useState('');
+
+  const progress = remaining === null ? 0 : ((60 - remaining) / 60) * 100;
 
   const handleRoomLeave = () => {
     roomLeaveMutation.mutate(
@@ -25,27 +26,54 @@ const GamePage = () => {
       onSuccess: () => {
         navigate('/home', { replace: true });
       },
-      onError: () => {
-        navigate('/home', { replace: true });
+    });
+  }
+
+  const handleSubmit = () => {
+    console.log(answer);
+    submitAnswerMutation.mutate({
+      roomId: Number(roomId),
+      index: gameEvent.index,
+      answer: answer
+    }, {
+      onSuccess: (res) => {
+        console.log(res);
       },
-    },
-    );
+    });
   }
 
   useEffect(() => {
     if (data?.users) {
       setUsers(data.users);
     }
-  }, [data]);
+  }, [data?.users]);
+
+  useEffect(() => {
+    if (!data?.createdAt) return;
+
+    const created = new Date(data.createdAt).getTime();
+    const endTime = created + 60 * 1000; // 생성시간 + 60초
+
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const diff = Math.max(0, Math.floor((endTime - now) / 1000));
+      setRemaining(diff);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [data?.createdAt]);
 
   useEffect(() => {
     const subs = [
       subscribe(`/topic/room/${roomId}/users`, (users) => setUsers(users)),
-      subscribe(`/topic/room/${roomId}/question`, (msg: GameEvent) => {
-        console.log(msg);
-        setGameEvent(msg);
+      subscribe(`/topic/room/${roomId}/event`, (gameEvent: GameEvent) => {
+        if (gameEvent.type === 'RESULT') {
+
+        } else {
+          setAnswer('');
+          setGameEvent(gameEvent);
+        }
       }),
-      subscribe(`/topic/room/${roomId}`, (msg) => console.log('result', msg)),
     ];
     return () => {
       subs.forEach((s) => s?.unsubscribe());
@@ -143,29 +171,94 @@ const GamePage = () => {
 
           {/* 2) 오른쪽: 메인 영역 (방 정보 + 떠나기 버튼 등) */}
           <Box flex="1">
-            <Stack gap={4}>
-              <Text fontSize="lg" fontWeight="bold">
-                방 번호: {roomId}
-              </Text>
-              <Button variant="outline" size="sm" onClick={handleRoomLeave}>
-                방 떠나기
-              </Button>
+            <Stack h="100%" display="flex">
+              <Text fontSize="lg" fontWeight="bold">{data?.categoryName}</Text>
               {gameEvent?.type === 'WAITING' && (
-                <Center>
-                  <Text color="gray.500">{data?.createdAt}</Text>
-                </Center>
+                <Stack flex="1" justify="space-between">
+                  <Button variant="outline" size="sm" onClick={handleRoomLeave}>
+                    방 떠나기
+                  </Button>
+                  <Center>
+                    <Text color="blue.500" fontWeight="bold">
+                      남은 대기시간: {remaining !== null ? `${remaining}초` : '...'}
+                    </Text>
+                  </Center>
+                  <Progress.Root value={progress} size="sm" borderRadius="md">
+                    <Progress.Track bg="gray.200">
+                      <Progress.Range
+                        bg="blue.400"
+                        transition="width 0.3s linear"
+                      />
+                    </Progress.Track>
+                  </Progress.Root>
+                </Stack>
               )}
               {gameEvent?.type === 'GAME_STARTED' && (
-                <Text color="blue.500">GAME_STARTED</Text>
+                <Stack flex="1">
+                  <Center>
+                    <Text>잠시후 게임이 시작됩니다.</Text>
+                  </Center>
+                  <ProgressCircle.Root value={null} size="sm">
+                    <ProgressCircle.Circle>
+                      <ProgressCircle.Track />
+                      <ProgressCircle.Range />
+                    </ProgressCircle.Circle>
+                  </ProgressCircle.Root>
+                </Stack>
               )}
               {gameEvent?.type === 'QUESTION_STARTED' && (
-                <Text color="blue.500">{gameEvent.question?.content}</Text>
+                <Stack flex="1">
+                  <Text color="blue.500">{gameEvent.question?.content}</Text>
+
+                  {gameEvent.question?.questionType === 1 ? (
+                    <Input
+                      placeholder="정답을 입력하세요"
+                      value={answer}
+                      onChange={(e) => setAnswer(e.target.value)}
+                    />
+                  ) :
+                    <RadioGroup.Root                    >
+                      <VStack align="stretch" gap={2}>
+                        {gameEvent.question?.answers.map((answer, idx) => (
+                          <RadioGroup.Item
+                            key={idx}
+                            value={answer.answer}
+                            cursor="pointer"
+                            p={2}
+                            borderRadius="md"
+                            borderWidth="1px"
+                            onClick={() => { console.log(answer.answer); setAnswer(answer.answer) }}
+                          >
+                            <RadioGroup.ItemHiddenInput />
+                            <RadioGroup.ItemIndicator />
+                            <RadioGroup.ItemText>{answer.answer}</RadioGroup.ItemText>
+                          </RadioGroup.Item>
+                        ))}
+                      </VStack>
+                    </RadioGroup.Root>
+                  }
+                  <Button onClick={handleSubmit}>정답 제출</Button>
+                </Stack>
               )}
               {gameEvent?.type === 'QUESTION_FINISHED' && (
-                <Text color="blue.500">QUESTION_ENDED</Text>
+                <Stack flex="1">
+                  <Center>
+                    <Text>다음 문제 출제중...</Text>
+                  </Center>
+                  <ProgressCircle.Root value={null} size="sm">
+                    <ProgressCircle.Circle>
+                      <ProgressCircle.Track />
+                      <ProgressCircle.Range />
+                    </ProgressCircle.Circle>
+                  </ProgressCircle.Root>
+                </Stack>
               )}
               {gameEvent?.type === 'GAME_FINISHED' && (
-                <Text color="blue.500">GAME_ENDED</Text>
+                <Stack flex="1">
+                  <Center>
+                    <Text color="blue.500">퀴즈가 종료되었습니다.</Text>
+                  </Center>
+                </Stack>
               )}
             </Stack>
           </Box>

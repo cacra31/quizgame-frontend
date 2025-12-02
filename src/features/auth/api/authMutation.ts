@@ -1,21 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import useAuthStore from "../stores/authStore";
 import { api } from "@/shared/api/apiClient";
-interface LoginRequest {
-    userId: string;
-    password: string;
-}
-
-interface LoginResponse {
-    userId: string;
-    name: string;
-}
-
-interface SignUpRequest {
-    userId: string;
-    password: string;
-    name: string;
-}
+import type { LoginRequest, LoginResponse, SignUpRequest } from "@/types/userType";
 
 export const useLoginMutation = () => {
     const login = useAuthStore((s) => s.login);
